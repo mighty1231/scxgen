@@ -1,6 +1,5 @@
 import sys
-
-sys.path.append('..\\..')
+sys.path.append('..\\..') # It is used for only importing trggen2
 
 from trggen2 import *
 
