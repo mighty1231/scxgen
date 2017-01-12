@@ -16,3 +16,5 @@ from .convtep import ConvertTrigEditPlusTrigger
 from .hooks import *
 from .utils import *
 from .coder import Coder
+
+__version__ = '1.0'
