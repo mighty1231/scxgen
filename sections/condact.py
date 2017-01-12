@@ -1,21 +1,27 @@
 from .trigsection import Condition, Action
 from .mbrfsection import MBAction
 from ..coder import Coder
+from ..trgconst import *
 
+'''
+Special arguments
+PU means Player, Unit
+CPU means Count, Player, Unit
+'''
 
 # predefined conditions
 class CountdownTimer(Condition):
 	_id_ = 1
 	_args_ = [
 		('Comparison' , Coder.Comparison),
-		('Time'       , Coder.Default)
+		('Time'       , Coder.Default),
 	]
 	_extra_args_ = {
 		'Comparison' : 'comparison',
 		'Time'       : 'amount',
 		'AtLeast'    : lambda cond, time: cond.Comparison(AtLeast).Time(time),
 		'AtMost'     : lambda cond, time: cond.Comparison(AtMost).Time(time),
-		'Exactly'    : lambda cond, time: cond.Comparison(Exactly).Time(time)
+		'Exactly'    : lambda cond, time: cond.Comparison(Exactly).Time(time),
 	}
 
 class Command(Condition):
@@ -24,17 +30,17 @@ class Command(Condition):
 		('Player'     , Coder.Player),
 		('Comparison' , Coder.Comparison),
 		('Number'     , Coder.Default),
-		('Unit'       , Coder.Unit)
+		('Unit'       , Coder.Unit),
 	]
 	_extra_args_ = {
 		'Player'     : 'player',
 		'Comparison' : 'comparison',
 		'Number'     : 'amount',
 		'Unit'       : 'unitid',
-		'PUnit'      :  ('Player', 'Unit'),
+		'PU'         :  ('Player', 'Unit'),
 		'AtLeast'    : lambda cond, number: cond.Comparison(AtLeast).Number(number),
 		'AtMost'     : lambda cond, number: cond.Comparison(AtMost).Number(number),
-		'Exactly'    : lambda cond, number: cond.Comparison(Exactly).Number(number)
+		'Exactly'    : lambda cond, number: cond.Comparison(Exactly).Number(number),
 	}
 
 class Bring(Condition):
@@ -52,9 +58,10 @@ class Bring(Condition):
 		'Number'     : 'amount',
 		'Unit'       : 'unitid',
 		'Location'   : 'locid',
+		'PU'         :  ('Player', 'Unit'),
 		'AtLeast'    : lambda cond, number: cond.Comparison(AtLeast).Number(number),
 		'AtMost'     : lambda cond, number: cond.Comparison(AtMost).Number(number),
-		'Exactly'    : lambda cond, number: cond.Comparison(Exactly).Number(number)
+		'Exactly'    : lambda cond, number: cond.Comparison(Exactly).Number(number),
 	}
 
 class Accumulate(Condition):
@@ -72,7 +79,7 @@ class Accumulate(Condition):
 		'ResourceType' : 'restype',
 		'AtLeast'      : lambda cond, number: cond.Comparison(AtLeast).Number(number),
 		'AtMost'       : lambda cond, number: cond.Comparison(AtMost).Number(number),
-		'Exactly'      : lambda cond, number: cond.Comparison(Exactly).Number(number)
+		'Exactly'      : lambda cond, number: cond.Comparison(Exactly).Number(number),
 	}
 
 
@@ -91,7 +98,7 @@ class Kills(Condition):
 		'Unit'        : 'unitid',
 		'AtLeast'     : lambda cond, number: cond.Comparison(AtLeast).Number(number),
 		'AtMost'      : lambda cond, number: cond.Comparison(AtMost).Number(number),
-		'Exactly'     : lambda cond, number: cond.Comparison(Exactly).Number(number)
+		'Exactly'     : lambda cond, number: cond.Comparison(Exactly).Number(number),
 	}
 
 	@staticmethod
@@ -139,8 +146,10 @@ class Switch(Condition):
 		('State'  , Coder.SwitchState),
 	]
 	_extra_args_ = {
-		'Switch' : 'restype',
-		'State'  : 'comparison',
+		'Switch'  : 'restype',
+		'State'   : 'comparison',
+		'Set'     : lambda cond, sw: cond.Switch(sw).State(Set),
+		'Cleared' : lambda cond, sw: cond.Switch(sw).State(Cleared),
 	}
 
 class ElapsedTime(Condition):
@@ -191,6 +200,7 @@ class Deaths(Condition):
 		'Comparison' : 'comparison',
 		'Number'     : 'amount',
 		'Unit'       : 'unitid',
+		'PU'         :  ('Player', 'Unit'),
 		'AtLeast'    : lambda cond, number: cond.Comparison(AtLeast).Number(number),
 		'AtMost'     : lambda cond, number: cond.Comparison(AtMost).Number(number),
 		'Exactly'    : lambda cond, number: cond.Comparison(Exactly).Number(number),
@@ -296,7 +306,7 @@ class Transmission(Action):
 		('TimeModifier' , Coder.Modifier),
 		('Time'         , Coder.Default),
 		('Text'         , Coder.String),
-		('Flag'         , Coder.Default)
+		('Flag'         , Coder.Default),
 	]
 	_extra_args_ = {
 		'Unit'         : 'unitid',
@@ -310,8 +320,8 @@ class Transmission(Action):
 
 	def __init__(self, *args, AlwaysDisplay = 4):
 		if len(args) == len(self._args_) - 1:
-			args += (AlwaysDisplay, )
-		super().__init__(*args)
+			args += (AlwaysDisplay, ),
+		super().__init__(*args),
 
 class PlayWAV(Action):
 	_id_, _flag_ = 8, 4
@@ -325,8 +335,8 @@ class DisplayText(Action):
 
 	def __init__(self, *args, AlwaysDisplay = 4):
 		if len(args) == len(self._args_) - 1:
-			args += (AlwaysDisplay, )
-		super().__init__(*args)
+			args += (AlwaysDisplay, ),
+		super().__init__(*args),
 
 class CenterView(Action):
 	_id_, _flag_ = 10, 4
@@ -348,6 +358,10 @@ class CreateUnitWithProperties(Action):
 		'Where'      : 'locid1',
 		'Player'     : 'player1',
 		'Properties' : 'player2',
+		'Number'     : 'Count',
+		'At'         : 'Where',
+		'PU'         : ('Player', 'Unit'),
+		'CPU'        : ('Count', 'Player', 'Unit'),
 	}
 
 class SetMissionObjectives(Action):
@@ -364,6 +378,10 @@ class SetSwitch(Action):
 	_extra_args_ = {
 		'Switch' : 'player2',
 		'State'  : 'amount',
+		'Set'    : lambda cond, sw : cond.Switch(sw).State(Set),
+		'Clear'  : lambda cond, sw : cond.Switch(sw).State(Clear),
+		'Toggle' : lambda cond, sw : cond.Switch(sw).State(Toggle),
+		'Random' : lambda cond, sw : cond.Switch(sw).State(Random),
 	}
 
 class SetCountdownTimer(Action):
@@ -375,6 +393,9 @@ class SetCountdownTimer(Action):
 	_extra_args_ = {
 		'TimeModifier' : 'amount',
 		'Time'         : 'time',
+		'SetTo'        : lambda cond, val: cond.Time(val).TimeModifier(SetTo),
+		'Add'          : lambda cond, val: cond.Time(val).TimeModifier(Add),
+		'Subtract'     : lambda cond, val: cond.Time(val).TimeModifier(Subtract),
 	}
 
 class RunAIScript(Action):
@@ -391,6 +412,7 @@ class RunAIScriptAt(Action):
 	_extra_args_ = {
 		'Script' : 'player2',
 		'Where'  : 'locid1',
+		'At'     : 'Where',
 	}
 
 class LeaderBoardControl(Action):
@@ -459,6 +481,7 @@ class KillUnit(Action):
 	_extra_args_ = {
 		'Unit'   : 'unitid',
 		'Player' : 'player1',
+		'PU'     : ('Player', 'Unit'),
 	}
 
 class KillUnitAt(Action):
@@ -474,6 +497,11 @@ class KillUnitAt(Action):
 		'Unit'      : 'unitid',
 		'Where'     : 'locid1',
 		'ForPlayer' : 'player1',
+		'Number'    : 'Count',
+		'Player'    : 'ForPlayer',
+		'At'        : 'Where',
+		'PU'        : ('ForPlayer', 'Unit'),
+		'CPU'       : ('Count', 'ForPlayer', 'Unit'),
 	}
 
 class RemoveUnit(Action):
@@ -485,6 +513,7 @@ class RemoveUnit(Action):
 	_extra_args_ = {
 		'Unit'   : 'unitid',
 		'Player' : 'player1',
+		'PU'     : ('Player', 'Unit'),
 	}
 
 class RemoveUnitAt(Action):
@@ -500,6 +529,9 @@ class RemoveUnitAt(Action):
 		'Unit'      : 'unitid',
 		'Where'     : 'locid1',
 		'ForPlayer' : 'player1',
+		'At'        : 'Where',
+		'PU'        : ('ForPlayer', 'Unit'),
+		'CPU'       : ('Count', 'ForPlayer', 'Unit'),
 	}
 
 class SetResources(Action):
@@ -515,6 +547,9 @@ class SetResources(Action):
 		'Modifier'     : 'amount',
 		'Amount'       : 'player2',
 		'ResourceType' : 'unitid',
+		'SetTo'        : lambda cond, val: cond.Amount(val).Modifier(SetTo),
+		'Add'          : lambda cond, val: cond.Amount(val).Modifier(Add),
+		'Subtract'     : lambda cond, val: cond.Amount(val).Modifier(Subtract),
 	}
 
 class SetScore(Action):
@@ -530,6 +565,9 @@ class SetScore(Action):
 		'Modifier'  : 'amount',
 		'Amount'    : 'player2',
 		'ScoreType' : 'unitid',
+		'SetTo'     : lambda cond, val: cond.Amount(val).Modifier(SetTo),
+		'Add'       : lambda cond, val: cond.Amount(val).Modifier(Add),
+		'Subtract'  : lambda cond, val: cond.Amount(val).Modifier(Subtract),
 	}
 
 class MinimapPing(Action):
@@ -639,10 +677,14 @@ class MoveLocation(Action):
 		('DestLocation' , Coder.Location),
 	]
 	_extra_args_ = {
-		'Location'     : 'player2',
-		'OnUnit'       : 'unitid',
-		'Owner'        : 'player1',
-		'DestLocation' : 'locid1',
+		'Location'       : 'player2',
+		'OnUnit'         : 'unitid',
+		'Owner'          : 'player1',
+		'DestLocation'   : 'locid1',
+		'Target'         : 'Location',
+		'TargetLocation' : 'Location',
+		'In'             : 'DestLocation',
+		'PU'             : ('Owner', 'OnUnit'),
 	}
 
 class MoveUnit(Action):
@@ -660,6 +702,10 @@ class MoveUnit(Action):
 		'Owner'         : 'player1',
 		'StartLocation' : 'locid1',
 		'DestLocation'  : 'player2',
+		'From'          : 'StartLocation',
+		'To'            : 'DestLocation',
+		'PU'            : ('Owner', 'UnitType'),
+		'CPU'           : ('Count', 'Owner', 'Unit'),
 	}
 
 class LeaderBoardGreed(Action):
@@ -681,10 +727,14 @@ class SetDoodadState(Action):
 		('Where' , Coder.Location),
 	]
 	_extra_args_ = {
-		'State' : 'amount',
-		'Unit'  : 'unitid',
-		'Owner' : 'player1',
-		'Where' : 'locid1',
+		'State'  : 'amount',
+		'Unit'   : 'unitid',
+		'Owner'  : 'player1',
+		'Where'  : 'locid1',
+		'At'     : 'Where',
+		'PU'     : ('Owner', 'Unit'),
+		'Enable' : lambda cond: cond.State(Enable),
+		'Disable': lambda cond: cond.State(Disable),
 	}
 
 class SetInvincibility(Action):
@@ -696,10 +746,14 @@ class SetInvincibility(Action):
 		('Where' , Coder.Location),
 	]
 	_extra_args_ = {
-		'State' : 'amount',
-		'Unit'  : 'unitid',
-		'Owner' : 'player1',
-		'Where' : 'locid1',
+		'State'  : 'amount',
+		'Unit'   : 'unitid',
+		'Owner'  : 'player1',
+		'Where'  : 'locid1',
+		'At'     : 'Where',
+		'PU'     : ('Owner', 'Unit'),
+		'Enable' : lambda cond: cond.State(Enable),
+		'Disable': lambda cond: cond.State(Disable),
 	}
 
 class CreateUnit(Action):
@@ -715,6 +769,9 @@ class CreateUnit(Action):
 		'Unit'      : 'unitid',
 		'Where'     : 'locid1',
 		'ForPlayer' : 'player1',
+		'At'        : 'Where',
+		'PU'        : ('ForPlayer', 'Unit'),
+		'CPU'       : ('Number', 'ForPlayer', 'Unit'),
 	}
 
 class SetDeaths(Action):
@@ -730,6 +787,10 @@ class SetDeaths(Action):
 		'Modifier' : 'amount',
 		'Number'   : 'player2',
 		'Unit'     : 'unitid',
+		'PU'       : ('Player', 'Unit'),
+		'SetTo'    : lambda cond, val: cond.Number(val).Modifier(SetTo),
+		'Add'      : lambda cond, val: cond.Number(val).Modifier(Add),
+		'Subtract' : lambda cond, val: cond.Number(val).Modifier(Subtract),
 	}
 
 class Order(Action):
@@ -747,6 +808,12 @@ class Order(Action):
 		'StartLocation' : 'locid1',
 		'OrderType'     : 'amount',
 		'DestLocation'  : 'player2',
+		'From'          : 'StartLocation',
+		'To'            : 'DestLocation',
+		'PU'            : ('Owner', 'Unit'),
+		'Move'          : lambda cond, f, t: cond.From(f).To(t).OrderType(Move),
+		'Patrol'        : lambda cond, f, t: cond.From(f).To(t).OrderType(Patrol),
+		'Attack'        : lambda cond, f, t: cond.From(f).To(t).OrderType(Attack),
 	}
 
 class Comment(Action):
@@ -769,6 +836,10 @@ class GiveUnits(Action):
 		'Owner'    : 'player1',
 		'Where'    : 'locid1',
 		'NewOwner' : 'player2',
+		'To'       : 'NewOwner',
+		'At'       : 'Where',
+		'PU'       : ('Owner', 'Unit'),
+		'CPU'      : ('Count', 'Owner', 'Unit'),
 	}
 
 class ModifyUnitHitPoints(Action):
@@ -786,6 +857,10 @@ class ModifyUnitHitPoints(Action):
 		'Owner'   : 'player1',
 		'Where'   : 'locid1',
 		'Percent' : 'player2',
+		'At'      : 'Where',
+		'PU'      : ('Owner', 'Unit'),
+		'CPU'     : ('Count', 'Owner', 'Unit'),
+		'Full'    : lambda cond, val: cond.Percent(100),
 	}
 
 class ModifyUnitEnergy(Action):
@@ -803,6 +878,10 @@ class ModifyUnitEnergy(Action):
 		'Owner'   : 'player1',
 		'Where'   : 'locid1',
 		'Percent' : 'player2',
+		'At'      : 'Where',
+		'PU'      : ('Owner', 'Unit'),
+		'CPU'     : ('Count', 'Owner', 'Unit'),
+		'Full'    : lambda cond, val: cond.Percent(100),
 	}
 
 class ModifyUnitShields(Action):
@@ -820,6 +899,10 @@ class ModifyUnitShields(Action):
 		'Owner'   : 'player1',
 		'Where'   : 'locid1',
 		'Percent' : 'player2',
+		'At'      : 'Where',
+		'PU'      : ('Owner', 'Unit'),
+		'CPU'     : ('Count', 'Owner', 'Unit'),
+		'Full'    : lambda cond, val: cond.Percent(100),
 	}
 
 class ModifyUnitResourceAmount(Action):
@@ -835,6 +918,10 @@ class ModifyUnitResourceAmount(Action):
 		'Owner'    : 'player1',
 		'Where'    : 'locid1',
 		'NewValue' : 'player2',
+		'At'       : 'Where',
+		'To'       : 'NewValue',
+		'PU'       : ('Owner', 'Unit'),
+		'CPU'      : ('Count', 'Owner', 'Unit'),
 	}
 
 class ModifyUnitHangarCount(Action):
@@ -852,6 +939,9 @@ class ModifyUnitHangarCount(Action):
 		'Unit'  : 'unitid',
 		'Owner' : 'player1',
 		'Where' : 'locid1',
+		'At'    : 'Where',
+		'PU'    : ('Owner', 'Unit'),
+		'CPU'   : ('Count', 'Owner', 'Unit'),
 	}
 
 class PauseTimer(Action):
@@ -876,8 +966,11 @@ class SetAllianceStatus(Action):
 		('Status' , Coder.AllyStatus),
 	]
 	_extra_args_ = {
-		'Player' : 'player1',
-		'Status' : 'unitid',
+		'Player'   	    : 'player1',
+		'Status'   	    : 'unitid',
+		'Enemy'    	    : lambda cond, val: cond.Player(val).Status(Enemy),
+		'Ally'     	    : lambda cond, val: cond.Player(val).Status(Ally),
+		'AlliedVictory' : lambda cond, val: cond.Player(val).Status(AlliedVictory),
 	}
 
 # predefined mbactions

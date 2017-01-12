@@ -19,6 +19,8 @@ Nested list / Single item -> Flat list
 
 
 def FlattenList(l):
+	if type(l) in (str, bytes):
+		return [l]
 	try:
 		ret = []
 		for item in l:

@@ -143,10 +143,10 @@ class Condition:
 		if attr in Condition._orig_args_:
 			return lambda p:[self.__setattr__(attr, p), self][1]
 		elif isinstance(attr, tuple):
-			return lambda *p:[[self.__setattr__(attr[i], p[i])
-				for i in range(len(p))], self][1]
+			return lambda *lp:(lambda p:[[self.__setattr__(attr[i], p[i])
+				for i in range(len(p))], self][1])(FlattenList(lp))
 		elif hasattr(attr, '__call__'):
-			return lambda *args,**kwargs:[attr(self, *args, **kwargs), self][1]
+			return lambda *args,**kwargs:[attr(self, *FlattenList(args), **kwargs), self][1]
 		else:
 			raise AttributeError
 
@@ -288,10 +288,10 @@ class Action:
 		if attr in Action._orig_args_:
 			return lambda p:[self.__setattr__(attr, p), self][1]
 		elif isinstance(attr, tuple):
-			return lambda *p:[[self.__setattr__(attr[i], p[i])
-				for i in range(len(p))], self][1]
+			return lambda *lp:(lambda p:[[self.__setattr__(attr[i], p[i])
+				for i in range(len(p))], self][1])(FlattenList(lp))
 		elif hasattr(attr, '__call__'):
-			return lambda *args,**kwargs:[attr(self, *args, **kwargs), self][1]
+			return lambda *args,**kwargs:[attr(self, *FlattenList(args), **kwargs), self][1]
 		else:
 			raise AttributeError
 
