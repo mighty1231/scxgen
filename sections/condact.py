@@ -94,7 +94,8 @@ class Kills(Condition):
 		'Exactly'     : lambda cond, number: cond.Comparison(Exactly).Number(number)
 	}
 
-	def GetConstName(self):
+	@staticmethod
+	def GetConstName():
 		return 'Kills'
 
 # Kills must be special
