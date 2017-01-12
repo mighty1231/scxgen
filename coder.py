@@ -115,6 +115,7 @@ class Coder:
 					for unitname, unitid in UnitNameDict.items():
 						if unitid == value:
 							return mapstring2str(unitname)
+					return mapstring2str(value)
 				value = res
 			return mapstring2str(value)
 		elif methodtype == Coder.Switch:

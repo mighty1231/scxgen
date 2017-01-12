@@ -187,8 +187,13 @@ class Opponents(Condition):
 		'Exactly'    : lambda cond, number: cond.Comparison(Exactly).Number(number),
 	}
 
+_MemoryIdentity = lambda p: type(p._player) is int and type(p._unitid) is int and           \
+			(p._player > 26 or p._player < 13) and (p._unitid < 229 or p._unitid > 232) and \
+			(lambda p:p < 0 or p >= 4*12*228)(p._unitid * 48 + p._player * 4)
+
 class Deaths(Condition):
 	_id_ = 15
+	_identity_ = lambda p:p._condtype == 15 and not _MemoryIdentity(p)
 	_args_ = [
 		('Player'     , Coder.Player),
 		('Comparison' , Coder.Comparison),
@@ -205,6 +210,35 @@ class Deaths(Condition):
 		'AtMost'     : lambda cond, number: cond.Comparison(AtMost).Number(number),
 		'Exactly'    : lambda cond, number: cond.Comparison(Exactly).Number(number),
 	}
+
+class Memory(Condition):
+	_id_ = 15
+	_identity_ = lambda p:p._condtype == 15 and _MemoryIdentity(p)
+	_args_ = Deaths._args_ # actually, it is like Memory(0x58A344, Exactly, 43423)
+	_extra_args_ = {
+		'Player'     : 'player',
+		'Comparison' : 'comparison',
+		'Number'     : 'amount',
+		'Unit'       : 'unitid',
+		'Address'    : lambda cond, num:                                   \
+				(lambda p: cond.Player(p%12).Unit(p//12) if 0 <= p < 2736  \
+					else cond.Player(p).Unit(0))((num-0x58A364)//4),
+		'AtLeast'    : lambda cond, number: cond.Comparison(AtLeast).Number(number),
+		'AtMost'     : lambda cond, number: cond.Comparison(AtMost).Number(number),
+		'Exactly'    : lambda cond, number: cond.Comparison(Exactly).Number(number),
+	}
+	def __init__(self, *args):
+		super().__init__()
+		if args:
+			assert len(args) == 3 and args[0] & 0x3 == 0
+			self.Address(args[0]).Comparison(args[1]).Number(args[2])
+
+	def Decode(self):
+		return 'Memory(0x%08X, %s, %d)' %                                   \
+			((0x58A364 + 48*self._unitid + 4*self._player) % 0x100000000,   \
+			 Coder.decode(None, Coder.Comparison, self._comparison),        \
+			 self._amount)
+
 
 class CommandLeast(Condition):
 	_id_ = 16
@@ -378,10 +412,10 @@ class SetSwitch(Action):
 	_extra_args_ = {
 		'Switch' : 'player2',
 		'State'  : 'amount',
-		'Set'    : lambda cond, sw : cond.Switch(sw).State(Set),
-		'Clear'  : lambda cond, sw : cond.Switch(sw).State(Clear),
-		'Toggle' : lambda cond, sw : cond.Switch(sw).State(Toggle),
-		'Random' : lambda cond, sw : cond.Switch(sw).State(Random),
+		'Set'    : lambda act, sw : act.Switch(sw).State(Set),
+		'Clear'  : lambda act, sw : act.Switch(sw).State(Clear),
+		'Toggle' : lambda act, sw : act.Switch(sw).State(Toggle),
+		'Random' : lambda act, sw : act.Switch(sw).State(Random),
 	}
 
 class SetCountdownTimer(Action):
@@ -393,9 +427,9 @@ class SetCountdownTimer(Action):
 	_extra_args_ = {
 		'TimeModifier' : 'amount',
 		'Time'         : 'time',
-		'SetTo'        : lambda cond, val: cond.Time(val).TimeModifier(SetTo),
-		'Add'          : lambda cond, val: cond.Time(val).TimeModifier(Add),
-		'Subtract'     : lambda cond, val: cond.Time(val).TimeModifier(Subtract),
+		'SetTo'        : lambda act, val: act.Time(val).TimeModifier(SetTo),
+		'Add'          : lambda act, val: act.Time(val).TimeModifier(Add),
+		'Subtract'     : lambda act, val: act.Time(val).TimeModifier(Subtract),
 	}
 
 class RunAIScript(Action):
@@ -547,9 +581,9 @@ class SetResources(Action):
 		'Modifier'     : 'amount',
 		'Amount'       : 'player2',
 		'ResourceType' : 'unitid',
-		'SetTo'        : lambda cond, val: cond.Amount(val).Modifier(SetTo),
-		'Add'          : lambda cond, val: cond.Amount(val).Modifier(Add),
-		'Subtract'     : lambda cond, val: cond.Amount(val).Modifier(Subtract),
+		'SetTo'        : lambda act, val: act.Amount(val).Modifier(SetTo),
+		'Add'          : lambda act, val: act.Amount(val).Modifier(Add),
+		'Subtract'     : lambda act, val: act.Amount(val).Modifier(Subtract),
 	}
 
 class SetScore(Action):
@@ -565,9 +599,9 @@ class SetScore(Action):
 		'Modifier'  : 'amount',
 		'Amount'    : 'player2',
 		'ScoreType' : 'unitid',
-		'SetTo'     : lambda cond, val: cond.Amount(val).Modifier(SetTo),
-		'Add'       : lambda cond, val: cond.Amount(val).Modifier(Add),
-		'Subtract'  : lambda cond, val: cond.Amount(val).Modifier(Subtract),
+		'SetTo'     : lambda act, val: act.Amount(val).Modifier(SetTo),
+		'Add'       : lambda act, val: act.Amount(val).Modifier(Add),
+		'Subtract'  : lambda act, val: act.Amount(val).Modifier(Subtract),
 	}
 
 class MinimapPing(Action):
@@ -733,8 +767,8 @@ class SetDoodadState(Action):
 		'Where'  : 'locid1',
 		'At'     : 'Where',
 		'PU'     : ('Owner', 'Unit'),
-		'Enable' : lambda cond: cond.State(Enable),
-		'Disable': lambda cond: cond.State(Disable),
+		'Enable' : lambda act: act.State(Enable),
+		'Disable': lambda act: act.State(Disable),
 	}
 
 class SetInvincibility(Action):
@@ -752,8 +786,8 @@ class SetInvincibility(Action):
 		'Where'  : 'locid1',
 		'At'     : 'Where',
 		'PU'     : ('Owner', 'Unit'),
-		'Enable' : lambda cond: cond.State(Enable),
-		'Disable': lambda cond: cond.State(Disable),
+		'Enable' : lambda act: act.State(Enable),
+		'Disable': lambda act: act.State(Disable),
 	}
 
 class CreateUnit(Action):
@@ -774,8 +808,13 @@ class CreateUnit(Action):
 		'CPU'       : ('Number', 'ForPlayer', 'Unit'),
 	}
 
+_SetMemoryIdentity = lambda p: type(p._player1) is int and type(p._unitid) is int and         \
+			(p._player1 > 26 or p._player1 < 13) and (p._unitid < 229 or p._unitid > 232) and \
+			(lambda p:p < 0 or p >= 4*12*228)(p._unitid * 48 + p._player1 * 4)
+
 class SetDeaths(Action):
 	_id_, _flag_ = 45, 20
+	_identity_ = lambda p:p._acttype == 45 and not _SetMemoryIdentity(p)
 	_args_ = [
 		('Player'   , Coder.Player),
 		('Modifier' , Coder.Modifier),
@@ -788,10 +827,38 @@ class SetDeaths(Action):
 		'Number'   : 'player2',
 		'Unit'     : 'unitid',
 		'PU'       : ('Player', 'Unit'),
-		'SetTo'    : lambda cond, val: cond.Number(val).Modifier(SetTo),
-		'Add'      : lambda cond, val: cond.Number(val).Modifier(Add),
-		'Subtract' : lambda cond, val: cond.Number(val).Modifier(Subtract),
+		'SetTo'    : lambda act, val: act.Number(val).Modifier(SetTo),
+		'Add'      : lambda act, val: act.Number(val).Modifier(Add),
+		'Subtract' : lambda act, val: act.Number(val).Modifier(Subtract),
 	}
+
+class SetMemory(Action):
+	_id_, _flag_ = 45, 20
+	_identity_ = lambda p:p._acttype == 45 and _SetMemoryIdentity(p)
+	_args_ = SetDeaths._args_ # actually, it is like SetMemory(0x58A344, Exactly, 43423)
+	_extra_args_ = {
+		'Player'     : 'player1',
+		'Modifier'   : 'amount',
+		'Number'     : 'player2',
+		'Unit'       : 'unitid',
+		'Address'    : lambda act, num:                                    \
+				(lambda p: act.Player(p%12).Unit(p//12) if 0 <= p < 2736   \
+					else act.Player(p).Unit(0))((num-0x58A364)//4),
+		'SetTo'      : lambda act, val: act.Number(val).Modifier(SetTo),
+		'Add'        : lambda act, val: act.Number(val).Modifier(Add),
+		'Subtract'   : lambda act, val: act.Number(val).Modifier(Subtract),
+	}
+	def __init__(self, *args):
+		super().__init__()
+		if args:
+			assert len(args) == 3 and args[0] & 0x3 == 0
+			self.Address(args[0]).Modifier(args[1]).Number(args[2])
+
+	def Decode(self):
+		return 'SetMemory(0x%08X, %s, %d)' %                                 \
+			((0x58A364 + 48*self._unitid + 4*self._player1) % 0x100000000,   \
+			 Coder.decode(None, Coder.Modifier, self._amount),               \
+			 self._player2)
 
 class Order(Action):
 	_id_, _flag_ = 46, 20
@@ -811,9 +878,9 @@ class Order(Action):
 		'From'          : 'StartLocation',
 		'To'            : 'DestLocation',
 		'PU'            : ('Owner', 'Unit'),
-		'Move'          : lambda cond, f, t: cond.From(f).To(t).OrderType(Move),
-		'Patrol'        : lambda cond, f, t: cond.From(f).To(t).OrderType(Patrol),
-		'Attack'        : lambda cond, f, t: cond.From(f).To(t).OrderType(Attack),
+		'Move'          : lambda act, f, t: act.From(f).To(t).OrderType(Move),
+		'Patrol'        : lambda act, f, t: act.From(f).To(t).OrderType(Patrol),
+		'Attack'        : lambda act, f, t: act.From(f).To(t).OrderType(Attack),
 	}
 
 class Comment(Action):
@@ -860,7 +927,7 @@ class ModifyUnitHitPoints(Action):
 		'At'      : 'Where',
 		'PU'      : ('Owner', 'Unit'),
 		'CPU'     : ('Count', 'Owner', 'Unit'),
-		'Full'    : lambda cond, val: cond.Percent(100),
+		'Full'    : lambda act, val: act.Percent(100),
 	}
 
 class ModifyUnitEnergy(Action):
@@ -881,7 +948,7 @@ class ModifyUnitEnergy(Action):
 		'At'      : 'Where',
 		'PU'      : ('Owner', 'Unit'),
 		'CPU'     : ('Count', 'Owner', 'Unit'),
-		'Full'    : lambda cond, val: cond.Percent(100),
+		'Full'    : lambda act, val: act.Percent(100),
 	}
 
 class ModifyUnitShields(Action):
@@ -902,7 +969,7 @@ class ModifyUnitShields(Action):
 		'At'      : 'Where',
 		'PU'      : ('Owner', 'Unit'),
 		'CPU'     : ('Count', 'Owner', 'Unit'),
-		'Full'    : lambda cond, val: cond.Percent(100),
+		'Full'    : lambda act, val: act.Percent(100),
 	}
 
 class ModifyUnitResourceAmount(Action):
@@ -968,9 +1035,9 @@ class SetAllianceStatus(Action):
 	_extra_args_ = {
 		'Player'   	    : 'player1',
 		'Status'   	    : 'unitid',
-		'Enemy'    	    : lambda cond, val: cond.Player(val).Status(Enemy),
-		'Ally'     	    : lambda cond, val: cond.Player(val).Status(Ally),
-		'AlliedVictory' : lambda cond, val: cond.Player(val).Status(AlliedVictory),
+		'Enemy'    	    : lambda act, val: act.Player(val).Status(Enemy),
+		'Ally'     	    : lambda act, val: act.Player(val).Status(Ally),
+		'AlliedVictory' : lambda act, val: act.Player(val).Status(AlliedVictory),
 	}
 
 # predefined mbactions

@@ -107,7 +107,7 @@ class Condition:
 					args[i])
 
 		if args[1] < 0:
-			arg[1] += 0x100000000 # EPD, player
+			args[1] += 0x100000000 # EPD, player
 
 		args += (0, 0)
 
@@ -115,6 +115,8 @@ class Condition:
 
 	def Decode(self, starcraftmap=None):
 		cls = Condition.GetType(self)
+		if cls.Decode != Condition.Decode:
+			return cls.Decode(self)
 
 		decoded_vars = []
 		for i in range(len(cls._args_)):
@@ -260,6 +262,8 @@ class Action:
 
 	def Decode(self, starcraftmap=None):
 		cls = Action.GetType(self)
+		if cls.Decode != Action.Decode:
+			return cls.Decode(self)
 
 		decoded_vars = []
 		for i in range(len(cls._args_)):
