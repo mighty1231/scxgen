@@ -28,6 +28,7 @@ class MapFile:
 		self.loadname = loadname
 		self.savename = savename
 		self.backupdb = backupdb
+		self.hooks = []
 
 	def LoadMap(self, fname=None):
 		if fname is None:
@@ -271,9 +272,6 @@ class MapFile:
 		
 		return self.chk.getsection('STR').GetString(strid)
 
-	def Test(self):
-		pass
-
 	def __enter__(self):
 		self.LoadMap(self.loadname)
 		return self
@@ -281,4 +279,6 @@ class MapFile:
 	def __exit__(self, exc_type, exc_val, exc_tb):
 		if exc_type == None and exc_val == None and exc_tb == None:
 			self.SaveMap(self.savename)
-		print('MapFile.__exit__(', exc_type, exc_val, exc_tb, ')')
+		else:
+			print('Error')
+			print('MapFile.__exit__(', exc_type, exc_val, exc_tb, ')')

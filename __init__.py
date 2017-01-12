@@ -8,5 +8,6 @@ from .sections.mrgnsection import MRGNSection
 from .trgconst import *
 from .trgstrconst import *
 from .convtep import ConvertTrigEditPlusTrigger
+from .hooks import *
 from .utils import *
 from .coder import Coder

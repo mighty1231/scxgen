@@ -334,6 +334,11 @@ class Trigger:
 		for hookfunc in Trigger._hooks_:
 			hookfunc(self)
 
+		self.players = FlattenList(self.players)
+		self.conditions = FlattenList(self.conditions)
+		self.actions = FlattenList(self.actions)
+		self.flag = FlattenList(self.flag)
+		
 		for section in Trigger._sections_:
 			section.AddTrigger(self)
 
@@ -350,7 +355,7 @@ class Trigger:
 			for i in range(16):
 				if i < len(self.conditions):
 					cond = self.conditions[i]
-					log = 'Encoding condition #%d, should be condition type'
+					log = 'Encoding condition #%d, should be condition type' % (i+1)
 					assert isinstance(cond, Condition)
 					log = 'Encoding condition #%d: %s' % (i+1, Condition.GetType(cond).__name__)
 					b.append(cond.Encode(starcraftmap))
@@ -359,7 +364,7 @@ class Trigger:
 			for i in range(64):
 				if i < len(self.actions):
 					act = self.actions[i]
-					log = 'Encoding action #%d, should be action type'
+					log = 'Encoding action #%d, should be action type' % (i+1)
 					assert isinstance(act, Action)
 					log = 'Encoding action #%d: %s' % (i+1, Action.GetType(act).__name__)
 					b.append(act.Encode(starcraftmap))

@@ -170,7 +170,6 @@ class MBAction:
 			raise AttributeError
 
 class MBTrigger:
-	_hooks_ = []
 	_sections_ = []
 	def __init__(self, players, actions=[]):
 		self.debuginfo = []
@@ -184,9 +183,6 @@ class MBTrigger:
 
 		self.players = players
 		self.actions = actions
-
-		for hookfunc in MBTrigger._hooks_:
-			hookfunc(self)
 
 		for section in MBTrigger._sections_:
 			section.AddMBTrigger(self)
@@ -204,7 +200,8 @@ class MBTrigger:
 			for i in range(64):
 				if i < len(self.actions):
 					act = self.actions[i]
-					log = 'Encoding action #%d, should be action type, Hint: actions for mission briefing have all MB-prefix'
+					log = 'Encoding action #%d, should be action type\n' \
+						'Hint: actions for mission briefing have all MB-prefix' % (i+1)
 					assert isinstance(act, MBAction)
 					log = 'Encoding action #%d: %s' % (i+1, MBAction.GetType(act).__name__)
 					b.append(act.Encode(starcraftmap))
@@ -270,14 +267,6 @@ class MBTrigger:
 				players.append(i)
 
 		return MBTrigger(players, actions)
-
-	@staticmethod
-	def InstallHook(func):
-		MBTrigger._hooks_.append(func)
-
-	@staticmethod
-	def UninstallHook(func):
-		MBTrigger._hooks_.remove(func)
 
 	@staticmethod
 	def InstallSectionHook(mbrfsection):
