@@ -46,6 +46,8 @@ class MapFile:
 
 		# extract scenario.chk
 		rawchk = mr.Extract('staredit\\scenario.chk')
+		mr.Close()
+		
 		self.chk = chktok.CHK(self)
 		self.chk.loadchk(rawchk)
 
@@ -108,28 +110,35 @@ class MapFile:
 
 
 		# exceptional cases
+		exceptional = False
+
 		mbrfsection = self.chk.getsection('MBRF', required = True)
 		if mbrfsection.mbtriggers:
+			exceptional = True
 			with open('mbtrigger.txt', 'w', encoding='euc-kr') as fp:
 				for mbtrigger in mbrfsection.mbtriggers:
 					fp.write(mbtrigger.Decode(self))
 					fp.write('\n')
 
-			raise RuntimeError('All mbtriggers of original map should be removed')
-		mbrfsection.InstallMBTriggerHook()
-
 		trigsection = self.chk.getsection('TRIG', required = True)
 		if trigsection.triggers:
+			exceptional = True
 			with open('trigger.txt', 'w', encoding='euc-kr') as fp:
 				for trigger in trigsection.triggers:
 					fp.write(trigger.Decode(self))
 					fp.write('\n')
 
-			raise RuntimeError('All triggers of original map should be removed')
-		trigsection.InstallTriggerHook()
-		
+		if exceptional:
+			raise RuntimeError('All MissionBriefings and Triggers on map should be removed ' \
+				'before use this module. Check trigger.txt and mbtrigger.txt')
+
 		uprpsection = self.chk.getsection('UPRP', required = True)
 		uprpsection.Clear()
+		if self.chk.getsection('UPUS'):
+			self.chk.delsection('UPUS')
+
+		mbrfsection.InstallMBTriggerHook()
+		trigsection.InstallTriggerHook()
 		uprpsection.InstallUnitPropertyHook()
 
 	def SaveMap(self, fname=None):
