@@ -1,5 +1,5 @@
 import os
-from struct import unpack
+from struct import unpack, pack
 
 from . import binio, chktok, mpqapi, ubconv
 from .sections.uprpsection import UnitProperty
@@ -47,7 +47,7 @@ class MapFile:
 		# extract scenario.chk
 		rawchk = mr.Extract('staredit\\scenario.chk')
 		mr.Close()
-		
+
 		self.chk = chktok.CHK(self)
 		self.chk.loadchk(rawchk)
 
@@ -291,3 +291,61 @@ class MapFile:
 		else:
 			print('Error')
 			print('MapFile.__exit__(', exc_type, exc_val, exc_tb, ')')
+
+	def SetScenarioName(self, newstring):
+		strsection = self.chk.getsection('STR')
+		sprpsection = self.chk.getsection('SPRP')
+		scenario_name, scenario_desc = unpack('<HH', sprpsection.content)
+
+		# update string id 
+		scenario_name = strsection.ReplaceString(scenario_name, newstring)
+		sprpsection.content = pack('<HH', scenario_name, scenario_desc)
+
+	def SetScenarioDescription(self, newstring):
+		strsection = self.chk.getsection('STR')
+		sprpsection = self.chk.getsection('SPRP')
+		scenario_name, scenario_desc = unpack('<HH', sprpsection.content)
+
+		# update string id 
+		scenario_desc = strsection.ReplaceString(scenario_desc, newstring)
+		sprpsection.content = pack('<HH', scenario_name, scenario_desc)
+
+	def SetForce1Name(self, newstring):
+		strsection = self.chk.getsection('STR')
+		forcsection = self.chk.getsection('FORC')
+		force_name = binio.b2i2(forcsection.content, 8)
+
+		# update string id 
+		force_name = strsection.ReplaceString(force_name, newstring)
+		newcontent = [forcsection.content[:8], binio.i2b2(force_name), forcsection.content[10:]]
+		forcsection.content = b''.join(newcontent)
+
+	def SetForce2Name(self, newstring):
+		strsection = self.chk.getsection('STR')
+		forcsection = self.chk.getsection('FORC')
+		force_name = binio.b2i2(forcsection.content, 10)
+
+		# update string id 
+		force_name = strsection.ReplaceString(force_name, newstring)
+		newcontent = [forcsection.content[:10], binio.i2b2(force_name), forcsection.content[12:]]
+		forcsection.content = b''.join(newcontent)
+
+	def SetForce3Name(self, newstring):
+		strsection = self.chk.getsection('STR')
+		forcsection = self.chk.getsection('FORC')
+		force_name = binio.b2i2(forcsection.content, 12)
+
+		# update string id 
+		force_name = strsection.ReplaceString(force_name, newstring)
+		newcontent = [forcsection.content[:12], binio.i2b2(force_name), forcsection.content[14:]]
+		forcsection.content = b''.join(newcontent)
+
+	def SetForce4Name(self, newstring):
+		strsection = self.chk.getsection('STR')
+		forcsection = self.chk.getsection('FORC')
+		force_name = binio.b2i2(forcsection.content, 14)
+
+		# update string id 
+		force_name = strsection.ReplaceString(force_name, newstring)
+		newcontent = [forcsection.content[:14], binio.i2b2(force_name), forcsection.content[16:]]
+		forcsection.content = b''.join(newcontent)
