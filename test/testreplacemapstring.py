@@ -1,5 +1,5 @@
 import sys
-sys.path.append('..\\..') # It is used for only importing scxgen
+sys.path.append('..\\..') # It is used only for importing scxgen
 
 from scxgen import *
 
