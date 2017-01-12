@@ -17,4 +17,4 @@ from .hooks import *
 from .utils import *
 from .coder import Coder
 
-__version__ = '1.0'
+__version__ = '1.1'
