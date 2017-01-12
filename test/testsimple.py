@@ -1,7 +1,7 @@
 import sys
-sys.path.append('..\\..') # It is used for only importing trggen2
+sys.path.append('..\\..') # It is used for only importing scxgen
 
-from trggen2 import *
+from scxgen import *
 
 with MapFile("test_nombrftrig.scx", "result.scx") as mf:
 	Trigger(
